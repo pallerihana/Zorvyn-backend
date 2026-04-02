@@ -15,10 +15,13 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://your-frontend.vercel.app' // Replace with your actual frontend URL
+    'https://finance-dashboard.vercel.app',  // Your Vercel frontend URL
+    'https://finance-dashboard-git-main.vercel.app',  // Preview URL
+    'https://*.vercel.app'  // Allow all Vercel preview deployments
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Mount routes
