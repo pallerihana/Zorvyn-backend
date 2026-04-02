@@ -1,34 +1,56 @@
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./src/config/database');
+const authRoutes = require('./routes/authRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
-// Load env vars
-dotenv.config();
+const app = express();
 
-// Connect to database
-connectDB();
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const app = require('./src/app');
+// Enable CORS for production
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://your-frontend.vercel.app' // Replace with your Vercel URL after deployment
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
-const PORT = process.env.PORT || 5000;
+// Mount routes
+app.use('/api/auth', authRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`API URL: http://localhost:${PORT}/api`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  server.close(() => process.exit(1));
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'success', 
+    message: 'Finance Dashboard API is running',
+    timestamp: new Date().toISOString()
   });
 });
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot find ${req.originalUrl} on this server`
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
+});
+
+module.exports = app;
