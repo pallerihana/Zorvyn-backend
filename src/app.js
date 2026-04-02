@@ -10,19 +10,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Enable CORS for production
+// CORS Configuration - FIX THIS
 app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://finance-dashboard.vercel.app',  // Your Vercel frontend URL
-    'https://finance-dashboard-git-main.vercel.app',  // Preview URL
-    'https://*.vercel.app'  // Allow all Vercel preview deployments
+    'https://finance-dashboard.vercel.app',
+    'https://finance-dashboard-git-main.vercel.app',
+    /\.vercel\.app$/  // Allow all Vercel preview deployments
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -53,7 +56,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler - Must be after all routes
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
